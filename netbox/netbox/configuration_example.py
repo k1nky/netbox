@@ -224,3 +224,17 @@ TIME_FORMAT = 'g:i a'
 SHORT_TIME_FORMAT = 'H:i:s'
 DATETIME_FORMAT = 'N j, Y g:i a'
 SHORT_DATETIME_FORMAT = 'Y-m-d H:i'
+
+
+# OTP Settings
+
+# Set to True to enable OTP authentication. Install 'django_otp' and 'qrcode' to support this option.
+# Run migration `./manage.py migrate` after enabling OTP authentication.
+# WARNING: When the setting set to True you will lose access to the admin site becase there is no OTP device yet.
+# The first time to add a totp device run `./manage.py addtotp <username>` and use the printed QR code.
+# Next, you can manage OTP devices in the admin site.
+# AUTH_OTP_ENABLED = False
+
+# If you set this parameter to True, users will always be required to verify with an OTP device, even if no device is set for him.
+# The admin site will always require OTP authentication.
+# AUTH_OTP_REQUIRED = False

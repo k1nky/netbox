@@ -78,6 +78,8 @@ DEPLOYMENT_ID = hashlib.sha256(SECRET_KEY.encode('utf-8')).hexdigest()[:16]
 # Set static config parameters
 ADMINS = getattr(configuration, 'ADMINS', [])
 AUTH_PASSWORD_VALIDATORS = getattr(configuration, 'AUTH_PASSWORD_VALIDATORS', [])
+AUTH_OTP_ENABLED = getattr(configuration, 'AUTH_OTP_ENABLED', False)
+AUTH_OTP_REQUIRED = getattr(configuration, 'AUTH_OTP_REQUIRED', False)
 BASE_PATH = getattr(configuration, 'BASE_PATH', '')
 if BASE_PATH:
     BASE_PATH = BASE_PATH.strip('/') + '/'  # Enforce trailing slash only
@@ -354,6 +356,18 @@ MIDDLEWARE = [
     'netbox.middleware.ObjectChangeMiddleware',
     'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
+
+# Check OTP module
+if AUTH_OTP_ENABLED:
+    if importlib.util.find_spec('django_otp') is None:
+        raise ImproperlyConfigured(
+            f"AUTH_OTP_ENABLED is set to {AUTH_OTP_ENABLED} but django_otp is not present. It can be "
+            f"installed by running 'pip install django_otp qrcode'."
+        )
+
+    INSTALLED_APPS.extend(['django_otp', 'django_otp.plugins.otp_totp'])
+    MIDDLEWARE.extend(['django_otp.middleware.OTPMiddleware'])
+
 
 ROOT_URLCONF = 'netbox.urls'
 

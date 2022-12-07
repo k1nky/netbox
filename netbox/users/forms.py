@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm as DjangoPasswordChangeForm
 from django.contrib.postgres.forms import SimpleArrayField
 from django.utils.html import mark_safe
+from django.conf import settings
 
 from ipam.formfields import IPNetworkFormField
 from netbox.preferences import PREFERENCES
@@ -10,8 +11,29 @@ from utilities.utils import flatten_dict
 from .models import Token, UserConfig
 
 
-class LoginForm(BootstrapMixin, AuthenticationForm):
-    pass
+def LoginForm(*args, **kwargs):
+    if settings.AUTH_OTP_ENABLED:
+        from django_otp.forms import OTPAuthenticationFormMixin
+        from django_otp import user_has_device
+        class OTPAuthenticationForm(OTPAuthenticationFormMixin, AuthenticationForm):
+            otp_device = forms.CharField(required=False, widget=forms.Select)
+            otp_token = forms.CharField(required=False, widget=forms.TextInput(attrs={'autocomplete': 'off'}))
+            otp_challenge = forms.CharField(required=False)
+
+            def clean(self):
+                self.cleaned_data = super().clean()
+                user = self.get_user()
+                if user_has_device(user) or settings.AUTH_OTP_REQUIRED:
+                    self.clean_otp(self.get_user())
+
+                return self.cleaned_data
+        class Form(BootstrapMixin, OTPAuthenticationForm):
+            pass
+        return Form(*args, **kwargs)
+
+    class Form(BootstrapMixin, AuthenticationForm):
+        pass
+    return Form(*args, **kwargs)
 
 
 class PasswordChangeForm(BootstrapMixin, DjangoPasswordChangeForm):
